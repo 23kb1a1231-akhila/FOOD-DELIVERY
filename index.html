@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Food Delivery</title>
+<style>
+  :root {
+    --primary-color: #ff7043;
+    --accent-color: #ffab91;
+    --highlight-color: #fbe9e7;
+    --text-color: #333;
+    --button-color: #ff5722;
+    --button-hover: #e64a19;
+    --benefit-border: #ff9800;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--highlight-color);
+    color: var(--text-color);
+  }
+  header {
+    background: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 20px;
+  }
+  .container {
+    max-width: 600px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  label {
+    display: block;
+    margin-top: 10px;
+    color: var(--primary-color);
+    font-weight: bold;
+  }
+  select, input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--button-color);
+    color: white;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: var(--button-hover);
+  }
+  .summary {
+    background: #e1f5fe;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 4px;
+    display: none;
+  }
+  .status {
+    margin-top: 15px;
+    padding: 10px;
+    background: #fff3e0;
+    border-left: 5px solid var(--benefit-border);
+    font-weight: bold;
+  }
+  .confirmation {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e8f5e9;
+    border-left: 5px solid #4caf50;
+    border-radius: 4px;
+    display: none;
+  }
+  iframe {
+    width: 100%;
+    height: 250px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 4px;
+  }
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 10px;
+    background: #333;
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Food Delivery</h1>
+  <p>Real-Time Tracking & Secure Confirmation</p>
+</header>
+
+<div class="container">
+  <form id="orderForm">
+    <label for="name">Your Name</label>
+    <input type="text" id="name" required>
+
+    <label for="address">Delivery Address</label>
+    <textarea id="address" rows="2" required></textarea>
+
+    <label for="food">Select Food Item</label>
+    <select id="food" required>
+      <option value="">--Choose--</option>
+      <option>Veg Biryani</option>
+      <option>Chicken Biryani</option>
+      <option>Paneer Butter Masala</option>
+      <option>Masala Dosa</option>
+      <option>Chapati & Curry</option>
+      <option>Egg Fried Rice</option>
+    </select>
+
+    <label for="drink">Select Cool Drink</label>
+    <select id="drink" required>
+      <option value="">--Choose--</option>
+      <option>Coca-Cola</option>
+      <option>Pepsi</option>
+      <option>Sprite</option>
+      <option>Fanta</option>
+      <option>Maaza</option>
+      <option>7Up</option>
+    </select>
+
+    <button type="button" onclick="prepareOrder()">Place Order</button>
+  </form>
+
+  <div id="summary" class="summary"></div>
+
+  <div id="statusContainer" class="status" style="display:none;">
+    Status: <span id="currentStatus">Order Confirmed</span>
+    <button type="button" onclick="nextStatus()">Next Status</button>
+    <div style="margin-top:10px;">
+      Estimated Delivery Time: <span id="eta">15:00</span> minutes
+    </div>
+  </div>
+
+  <div id="mapContainer" style="display:none;">
+    <label>Driver Location:</label>
+    <iframe id="driverMap"
+      src="https://maps.google.com/maps?q=Hyderabad&output=embed"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+  <div id="confirmationContainer" class="confirmation">
+    <label>Upload Delivery Photo (Proof of Delivery):</label>
+    <input type="file" id="photoInput" accept="image/*"><br><br>
+    <label>Digital Signature:</label>
+    <input type="text" id="signatureInput" placeholder="Enter your name as signature">
+    <button type="button" onclick="confirmDelivery()">Confirm Delivery</button>
+    <div id="confirmationMessage" style="margin-top:10px; color: green;"></div>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 Food Delivery | All rights reserved.
+</footer>
+
+<script>
+  const statuses = ["Order Confirmed", "Preparing", "On the Way", "Delivered"];
+  let currentStatusIndex = 0;
+  let etaMinutes = 15;
+  let etaTimer;
+
+  function prepareOrder() {
+    const name = document.getElementById("name").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const food = document.getElementById("food").value;
+    const drink = document.getElementById("drink").value;
+
+    if (!name || !address || !food || !drink) {
+      alert("Please fill out all fields.");
+      return;
+    }
+
+    const summaryDiv = document.getElementById("summary");
+    summaryDiv.innerHTML = `
+      <strong>Order Summary:</strong><br>
+      Name: ${name}<br>
+      Address: ${address}<br>
+      Food: ${food}<br>
+      Drink: ${drink}<br>
+      <br><em>Your order is being processed with optimized routing.</em>
+    `;
+    summaryDiv.style.display = "block";
+
+    currentStatusIndex = 0;
+    etaMinutes = 15;
+    document.getElementById("currentStatus").textContent = statuses[currentStatusIndex];
+    document.getElementById("eta").textContent = `${etaMinutes}:00`;
+    document.getElementById("statusContainer").style.display = "block";
+    document.getElementById("mapContainer").style.display = "block";
+    document.getElementById("confirmationContainer").style.display = "none";
+
+    if (etaTimer) clearInterval(etaTimer);
+    etaTimer = setInterval(updateEta, 60000);
+  }
+
+  function nextStatus() {
+    if (currentStatusIndex < statuses.length - 1) {
+      currentStatusIndex++;
+      document.getElementById("currentStatus").textContent = statuses[currentStatusIndex];
+      if (statuses[currentStatusIndex] === "On the Way") {
+        document.getElementById("driverMap").src =
+          "https://maps.google.com/maps?q=Secunderabad&output=embed";
+      }
+      if (statuses[currentStatusIndex] === "Delivered") {
+        clearInterval(etaTimer);
+        document.getElementById("eta").textContent = "0:00";
+        document.getElementById("confirmationContainer").style.display = "block";
+      }
+    } else {
+      alert("Order is already delivered!");
+    }
+  }
+
+  function updateEta() {
+    if (etaMinutes > 0) {
+      etaMinutes--;
+      document.getElementById("eta").textContent = `${etaMinutes}:00`;
+    } else {
+      clearInterval(etaTimer);
+      document.getElementById("eta").textContent = "0:00";
+    }
+  }
+
+  function confirmDelivery() {
+    const photo = document.getElementById("photoInput").files[0];
+    const signature = document.getElementById("signatureInput").value.trim();
+
+    if (!photo || !signature) {
+      alert("Please upload a photo and enter your signature.");
+      return;
+    }
+
+    document.getElementById("confirmationMessage").textContent =
+      "Delivery confirmed. Thank you!";
+  }
+</script>
+
+</body>
+</html>
+
+
+
+
